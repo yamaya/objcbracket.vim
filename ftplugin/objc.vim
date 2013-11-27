@@ -1,34 +1,33 @@
 " Vim filetype plugin for filetype name.
-" Maintainer:	goles <me@nicolasgoles.com>
-" Version:	0.1
+" Originator:	goles <me@nicolasgoles.com>
+" Version:	0.2
 " Description:	Objcbracket is a re-packaging of Michael-Sanders "objc_match
 " bracket" which is basically TextMate's Insert Matching Start Bracket feature
 " in VimL. That project was abandoned a long time ago (2009 last commit date).
 " So I intend to maintain now and give it a better package.
-" Last Change:	2012-12-23
+" Last Change:	2013-11-27
 " License:	Vim License (see :help license)
 " Location:	ftplugin/objcbracket.vim
 " Website:	https://github.com/goles/objcbracket
-"
-" See objcbracket.txt for help.  This can be accessed by doing:
-"
-" :helptags ~/.vim/doc
-" :help objcbracket
+" Maintainer:	Masayuki YAMAYA <yamaya@cyberdom.co.jp>
 
-let g:objcbracket_version = '0.1'
+let g:objcbracket_version = '0.2'
 
 " Only do this when not done yet for this buffer
 if exists("b:did_ftplugin")
   finish
 endif
 
+let s:save_cpo = &cpo
+set cpo&vim
+
 " Don't load another filetype plugin for this buffer
 let b:did_ftplugin = 1
 
 " Allow use of line continuation.
-inoremap <buffer> <silent> ] <C-R>=MatchBracket()<CR>
+inoremap <buffer> <silent> ] <C-R>=<SID>MatchBracket()<CR>
 
-function! Count(haystack, needle)
+function! s:Count(haystack, needle)
     let counter = 0
     let index = stridx(a:haystack, a:needle)
     while index != -1
@@ -39,7 +38,7 @@ function! Count(haystack, needle)
 endf
 
 " Automatically inserts matching bracket, TextMate style!
-function! MatchBracket()
+function! s:MatchBracket()
     if pumvisible() " Close popup menu if it's visible.
         call feedkeys("\<esc>a", 'n')
         call feedkeys(']')
@@ -62,13 +61,13 @@ function! MatchBracket()
     let wrap_text = strpart(before_cursor, delimPos - 1)
 
     " These are used to tell whether the bracket is still open:
-    let left_brack_count = Count(before_cursor, '[') " Note the before_cursor!
-    let right_brack_count = Count(before_cursor, ']')
+    let left_brack_count = s:Count(before_cursor, '[') " Note the before_cursor!
+    let right_brack_count = s:Count(before_cursor, ']')
 
     " Don't autocomplete if line is blank, if inside or directly outside
     " string, or if inserting a matching bracket.
     if wrap_text == '' || wrap_text =~'@\=["'']\S*\s*\%'.col.'c'
-                \ || Count(line, '[') > Count(line, ']')
+                \ || s:Count(line, '[') > s:Count(line, ']')
         return ']'
         " Escape out of string when bracket is the next character, unless
         " wrapping past a colon or equals sign, or inserting a closing bracket.
@@ -110,31 +109,6 @@ function! MatchBracket()
     endif
 endf
 
-let s:save_cpo = &cpo
-set cpo&vim
-
-" Restore things when changing filetype.
-let b:undo_ftplugin = "setl fo< com< ofu<"
-
-" Configure the matchit plugin.
-let b:match_words = &matchpairs
-let b:match_skip = 's:comment\|string\|character'
-"let b:match_ignorecase = 1
-
-" Set 'formatoptions' to break comment lines but not other lines,
-" and insert the comment leader when hitting <CR> or using "o".
-setlocal fo-=t fo+=croql
-
-" Set completion with CTRL-X CTRL-O to autoloaded function.
-"if exists('&ofu')
-"  setlocal ofu=objcbracketcomplete#Complete
-"endif
-
-" Set 'comments'.
-"setlocal comments&
-
-" Teardown:{{{1
-"reset &cpo back to users setting
 let &cpo = s:save_cpo
 
 " vim: set sw=2 sts=2 et fdm=marker:
